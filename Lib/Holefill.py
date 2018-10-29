@@ -14,29 +14,66 @@ def ComputeSSD(TODOPatch, TODOMask, textureIm, patchL):
 	ssd_rows = tex_rows - 2 * patchL
 	ssd_cols = tex_cols - 2 * patchL
 	SSD = np.zeros((ssd_rows,ssd_cols))
+	
+	# Convert the textureIm's and TODOPatch's elements to 'float'
+	textureIm = textureIm * 1.0
+	TODOPatch = TODOPatch * 1.0
+	
+	# Initialize the result variable to 0
+	result = 0
+	
 	for r in range(ssd_rows):
 		for c in range(ssd_cols):
-			# Compute sum square difference between textureIm and TODOPatch
-			# for all pixels where TODOMask = 0, and store the result in SSD
-			#
-			# ADD YOUR CODE HERE
-			#
-			pass
-		pass
+		# Compute sum square difference between textureIm and TODOPatch
+		# for all pixels where TODOMask = 0, and store the result in SSD
+		
+		# Iterate through every element in TODOPatch rows
+		    for pr in range(patch_rows):
+		        
+		        # Iterate through every element in TODOPatch columns
+		        for pc in range(patch_cols):
+		          
+		          # Initialize the result variable to 0 in the beginning of each iteration (to be used for storing result of one cell of SSD).
+		           result = 0
+		           
+		           # For all pixels where TODOMask = 0, compute sum square difference between textureIm and TODOPatch 
+		           if TODOMask[pr][pc] == 0:   
+		               
+		               # Compute the squared difference in each color band (3 color bands in total) for the current windows of textureIm and TODOPatch,
+		               # (After each iteration, move textureIm window by [r+pr][c+pc] pixels as well as move the TODOPatch window by [pr][pc] pixels.
+		               band_zero = (textureIm[r+pr][c+pc][0]-TODOPatch[pr][pc][0])**2
+		               band_one =  (textureIm[r+pr][c+pc][1]-TODOPatch[pr][pc][1])**2
+		               band_two =  (textureIm[r+pr][c+pc][2]-TODOPatch[pr][pc][2])**2
+		               
+		               # Sum the results of the squared difference among the three color bands
+		               result = band_zero + band_one + band_two
+		               
+		               # Save the result into the appropriate SSD 2D array place (cell).
+		               SSD[r][c] = result
+		               
+	# Return the computed SSD 2D array with the sum squared differences 	
 	return SSD
+
 
 def CopyPatch(imHole,TODOMask,textureIm,iPatchCenter,jPatchCenter,iMatchCenter,jMatchCenter,patchL):
 	patchSize = 2 * patchL + 1
+	
 	for i in range(patchSize):
 		for j in range(patchSize):
-			# Copy the selected patch selectPatch into the image containing
-			# the hole imHole for each pixel where TODOMask = 1.
-			# The patch is centred on iPatchCenter, jPatchCenter in the image imHole
-			#
-			# ADD YOUR CODE HERE
-			#
-			pass
-		pass
+		    
+		    # Copy the selected patch selectPatch into the image containing
+		    # the hole imHole for each pixel where TODOMask = 1.
+		    if TODOMask[i][j] == 1:
+		        
+		        
+		        # Copy each pixel from the selectPatch to the appropriate place in the Image Hole (do the same for each of the 3 color bands)
+		        # After each iteration, move the window of imHole by [iPatchCenter - patchL + i][jPatchCenter - patchL  + j] as well as move the windows
+		        # of textureIm by [iMatchCenter - patchL + i][jMatchCenter - patchL  + j].
+		        imHole[iPatchCenter - patchL + i][jPatchCenter - patchL  + j][0] = textureIm[iMatchCenter - patchL + i][jMatchCenter - patchL  + j][0]
+		        imHole[iPatchCenter - patchL + i][jPatchCenter - patchL  + j][1] = textureIm[iMatchCenter - patchL + i][jMatchCenter - patchL  + j][1]
+		        imHole[iPatchCenter - patchL + i][jPatchCenter - patchL  + j][2] = textureIm[iMatchCenter - patchL + i][jMatchCenter - patchL  + j][2]
+		        
+	
 	return imHole
 
 ##############################################################################
@@ -65,6 +102,7 @@ def Find_Edge(hole_mask):
 					edge_mask[x,y] = 1
 	return edge_mask
 
+
 ##############################################################################
 #                           Main script starts here                          #
 ##############################################################################
@@ -74,7 +112,7 @@ def Find_Edge(hole_mask):
 #
 
 # Change patchL to change the patch size used (patch size is 2 *patchL + 1)
-patchL = 10
+patchL = 4
 patchSize = 2*patchL+1
 
 # Standard deviation for random patch selection
@@ -87,7 +125,7 @@ showResults = True
 # Read input image
 #
 
-im = Image.open('donkey.jpg').convert('RGB')
+im = Image.open('miniapple.jpg').convert('RGB')
 im_array = np.asarray(im, dtype=np.uint8)
 imRows, imCols, imBands = np.shape(im_array)
 
@@ -187,7 +225,7 @@ while (nFill > 0):
 
 		# Randomized selection of one of the best texture patches
 		ssdIm1 = np.sort(np.copy(ssdIm),axis=None)
-		ssdValue = ssdIm1[min(round(abs(random.gauss(0,randomPatchSD))),np.size(ssdIm1)-1)]
+		ssdValue = ssdIm1[min(int(round(abs(random.gauss(0,randomPatchSD)))),np.size(ssdIm1)-1)]
 		ssdIndex = np.nonzero(ssdIm==ssdValue)
 		iSelectCenter = ssdIndex[0][0]
 		jSelectCenter = ssdIndex[1][0]
@@ -217,4 +255,4 @@ while (nFill > 0):
 #
 if showResults == True:
 	Image.fromarray(imHole).convert('RGB').show()
-Image.fromarray(imHole).convert('RGB').save('results.jpg')
+Image.fromarray(imHole).convert('RGB').save('miniapple_out18p.jpg')
