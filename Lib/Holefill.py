@@ -27,15 +27,16 @@ def ComputeSSD(TODOPatch, TODOMask, textureIm, patchL):
 		# Compute sum square difference between textureIm and TODOPatch
 		# for all pixels where TODOMask = 0, and store the result in SSD
 		
+		# Initialize the result variable to 0 in the beginning of each iteration (to be used for storing result of one cell of SSD).
+		    result = 0
+		           
 		# Iterate through every element in TODOPatch rows
 		    for pr in range(patch_rows):
 		        
 		        # Iterate through every element in TODOPatch columns
 		        for pc in range(patch_cols):
 		          
-		          # Initialize the result variable to 0 in the beginning of each iteration (to be used for storing result of one cell of SSD).
-		           result = 0
-		           
+		      
 		           # For all pixels where TODOMask = 0, compute sum square difference between textureIm and TODOPatch 
 		           if TODOMask[pr][pc] == 0:   
 		               
@@ -46,11 +47,11 @@ def ComputeSSD(TODOPatch, TODOMask, textureIm, patchL):
 		               band_two =  (textureIm[r+pr][c+pc][2]-TODOPatch[pr][pc][2])**2
 		               
 		               # Sum the results of the squared difference among the three color bands
-		               result = band_zero + band_one + band_two
-		               
-		               # Save the result into the appropriate SSD 2D array place (cell).
-		               SSD[r][c] = result
-		               
+		               result += band_zero + band_one + band_two
+		              
+ 
+		          # Save the result into the appropriate SSD 2D array place (cell).
+		        SSD[r][c] = result		               
 	# Return the computed SSD 2D array with the sum squared differences 	
 	return SSD
 
@@ -112,7 +113,7 @@ def Find_Edge(hole_mask):
 #
 
 # Change patchL to change the patch size used (patch size is 2 *patchL + 1)
-patchL = 4
+patchL = 10
 patchSize = 2*patchL+1
 
 # Standard deviation for random patch selection
@@ -125,7 +126,7 @@ showResults = True
 # Read input image
 #
 
-im = Image.open('miniapple.jpg').convert('RGB')
+im = Image.open('wall.jpg').convert('RGB')
 im_array = np.asarray(im, dtype=np.uint8)
 imRows, imCols, imBands = np.shape(im_array)
 
@@ -255,4 +256,4 @@ while (nFill > 0):
 #
 if showResults == True:
 	Image.fromarray(imHole).convert('RGB').show()
-Image.fromarray(imHole).convert('RGB').save('miniapple_out18p.jpg')
+Image.fromarray(imHole).convert('RGB').save('wall_out.jpg')
