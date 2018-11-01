@@ -19,40 +19,52 @@ def ComputeSSD(TODOPatch, TODOMask, textureIm, patchL):
 	textureIm = textureIm * 1.0
 	TODOPatch = TODOPatch * 1.0
 	
-	# Initialize the result variable to 0
+	# Initialize the result variable to 0 (it will store the sum of the squared difference)
 	result = 0
 	
+	# Iterate through every row in SSD (and through every column of SSD in a row) to save the sum square difference
+	# between textureIm and TODOPatch for the a specific region described below)
 	for r in range(ssd_rows):
 		for c in range(ssd_cols):
+		    
 		# Compute sum square difference between textureIm and TODOPatch
 		# for all pixels where TODOMask = 0, and store the result in SSD
 		
-		# Initialize the result variable to 0 in the beginning of each iteration (to be used for storing result of one cell of SSD).
+		    # Re-Initialize the result variable to 0 in the beginning of each iteration of columns in SSD (Because we do not need the result to accumulate the sum
+		    # squared difference of another column. We only calculate the sum squared difference during the current iteration column in the current row and save in the 
+		    # SSD with the current iteration column and row. Therefore, reset result to 0 when we go to another column of SSD.).
 		    result = 0
 		           
-		# Iterate through every element in TODOPatch rows
+		    # Iterate through every element in TODOPatch rows (the "pr" is the index of one element in the range of pixels in patch_rows, and "pr" will be used
+		    # to move the "window" (contains only one pixel) of pixels (go through each row) in textureIm and TODOPatch since after each iteration, its value will increase; thus, will make computing sum squared
+		    # difference between the whole region of TODOPatch and the specific region of textureIm possible).
 		    for pr in range(patch_rows):
 		        
-		        # Iterate through every element in TODOPatch columns
+		        # Iterate through every element in TODOPatch columns. The "pc" is the index of one element in the range of pixels in patch_cols, and "pc" will be used
+		        # to move the "window" (contains only one pixel) of pixels (go through each column) in textureIm and TODOPatch since after each iteration, its value will increase; thus, will make computing sum squared
+		        # difference between the whole region of TODOPatch and the specific region of textureIm possible.
 		        for pc in range(patch_cols):
 		          
 		      
 		           # For all pixels where TODOMask = 0, compute sum square difference between textureIm and TODOPatch 
 		           if TODOMask[pr][pc] == 0:   
 		               
-		               # Compute the squared difference in each color band (3 color bands in total) for the current windows of textureIm and TODOPatch,
-		               # (After each iteration, move textureIm window by [r+pr][c+pc] pixels as well as move the TODOPatch window by [pr][pc] pixels.
-		               band_zero = (textureIm[r+pr][c+pc][0]-TODOPatch[pr][pc][0])**2
-		               band_one =  (textureIm[r+pr][c+pc][1]-TODOPatch[pr][pc][1])**2
-		               band_two =  (textureIm[r+pr][c+pc][2]-TODOPatch[pr][pc][2])**2
+		               # Compute the squared difference in each color band (3 color bands in total) for the current's iteration window (has only one pixel) of textureIm and TODOPatch,
+		               # (After each iteration, move textureIm window by [r + pr][c + pc] pixels as well as move the TODOPatch window by [pr][pc] pixels). This window movement after each
+		               # iteration will make sure every element in the TODOPatch region and the corresponding textureIm region will participate in computing the sum squared difference between
+		               # these regions.
+		               band_zero = (textureIm[r + pr][c + pc][0] - TODOPatch[pr][pc][0])**2
+		               band_one =  (textureIm[r + pr][c + pc][1] - TODOPatch[pr][pc][1])**2
+		               band_two =  (textureIm[r + pr][c + pc][2] - TODOPatch[pr][pc][2])**2
 		               
 		               # Sum the results of the squared difference among the three color bands
 		               result += band_zero + band_one + band_two
 		              
  
-		          # Save the result into the appropriate SSD 2D array place (cell).
+		        # Save the result into the appropriate SSD 2D array place (cell) in the current iteration of SSD columns and rows.
 		        SSD[r][c] = result		               
-	# Return the computed SSD 2D array with the sum squared differences 	
+	
+	# Return the computed SSD 2D array with the computed and saved sum squared differences.
 	return SSD
 
 
@@ -67,9 +79,15 @@ def CopyPatch(imHole,TODOMask,textureIm,iPatchCenter,jPatchCenter,iMatchCenter,j
 		    if TODOMask[i][j] == 1:
 		        
 		        
-		        # Copy each pixel from the selectPatch to the appropriate place in the Image Hole (do the same for each of the 3 color bands)
-		        # After each iteration, move the window of imHole by [iPatchCenter - patchL + i][jPatchCenter - patchL  + j] as well as move the windows
-		        # of textureIm by [iMatchCenter - patchL + i][jMatchCenter - patchL  + j].
+		        # Copy each pixel from the selectPatch to the appropriate place in the Image Hole (do the same for each of the 3 color bands).
+		        #
+		        # After each iteration, move the window(contains only one pixel) of imHole by [iPatchCenter - patchL + i][jPatchCenter - patchL  + j]  - (we use iPatchCenter in finding the right 
+		        # coordinates, the window, of imHole since the passed arguments iPatchCenter and jPatchCenter adjust coordinates relative to textureIm after each iteration of the while loop in which 
+		        # the function CopyPatch is called - codeline = 256). After each iteration of j (each column) in patchSize, the current window of imHole will move by one pixel to the right. After
+		        # each iteration of i (each row) in patchSize, the window of imHole will move by one row of pixels. This movement of the windows will ensure that the right and all needed pixels are updated.
+		        #
+		        # We move the window of textureIm as well by [iMatchCenter - patchL + i][jMatchCenter - patchL  + j] - (same reasoning as above of why I used iMatchCenter, jMatchCenter, i, and j when finding the right
+		        # coordinates of the window and moving the window to the right position that needs to be copied after each iteration, this time of textureIm).
 		        imHole[iPatchCenter - patchL + i][jPatchCenter - patchL  + j][0] = textureIm[iMatchCenter - patchL + i][jMatchCenter - patchL  + j][0]
 		        imHole[iPatchCenter - patchL + i][jPatchCenter - patchL  + j][1] = textureIm[iMatchCenter - patchL + i][jMatchCenter - patchL  + j][1]
 		        imHole[iPatchCenter - patchL + i][jPatchCenter - patchL  + j][2] = textureIm[iMatchCenter - patchL + i][jMatchCenter - patchL  + j][2]
@@ -113,7 +131,7 @@ def Find_Edge(hole_mask):
 #
 
 # Change patchL to change the patch size used (patch size is 2 *patchL + 1)
-patchL = 10
+patchL = 1
 patchSize = 2*patchL+1
 
 # Standard deviation for random patch selection
@@ -126,7 +144,7 @@ showResults = True
 # Read input image
 #
 
-im = Image.open('wall.jpg').convert('RGB')
+im = Image.open('donkey.jpg').convert('RGB')
 im_array = np.asarray(im, dtype=np.uint8)
 imRows, imCols, imBands = np.shape(im_array)
 
@@ -256,4 +274,4 @@ while (nFill > 0):
 #
 if showResults == True:
 	Image.fromarray(imHole).convert('RGB').show()
-Image.fromarray(imHole).convert('RGB').save('wall_out.jpg')
+Image.fromarray(imHole).convert('RGB').save('donkey_output.jpg')
